@@ -1,0 +1,20 @@
+<h1><em>Blackjack!</em></h1>
+
+<p>Welcome <%= session[:p_name] %>. </p>
+
+Dealer's Cards
+<ul>
+  <% session[:d_cards].each do |card| %> 
+    <li><%= card.to_s %></li>
+  <% end %>
+</ul>
+
+<br/>
+
+Player's cards:
+<ul>
+  <% session[:p_cards].each do |card| %>
+    <li><%= card.to_s %></li>
+  <% end %>
+</ul>
+Your total is: <%= total(session[:p_cards]) %>
