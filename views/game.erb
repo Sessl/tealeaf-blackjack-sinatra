@@ -2,19 +2,71 @@
 
 <p>Welcome <%= session[:p_name] %>. </p>
 
-Dealer's Cards
-<ul>
-  <% session[:d_cards].each do |card| %> 
-    <li><%= card.to_s %></li>
-  <% end %>
-</ul>
+<% if @show_continue_button %>
+ <form id="continue_form" action='/game/continue' method='post'>
+    <input type='submit' class='btn btn-success' value="Continue Game" />
+ </form>
+ <form id="quit_form" action='/game/quit' method='post'>
+    <input type='submit' class='btn btn-warning' value="Quit Game" />
+ </form>
+<% end %>
 
-<br/>
+</br>
+</br>
 
-Player's cards:
-<ul>
-  <% session[:p_cards].each do |card| %>
-    <li><%= card.to_s %></li>
+<div class="well">
+  <h5>Dealer's Cards</h5>
+  
+    <% session[:d_cards].each_with_index do |card, i| %>
+      <% if session[:turn] != "dealer" && i == 0 %>
+        <img src="/images/cards/cover.jpg" >
+      <% else %> 
+        <%= card_image(card) %>
+      <% end %>
+    <% end %>
+<% if @show_dealer_button %>
+  <p>
+     <h5>Dealer has <%= session[:dealer_sum]%> and will hit.</h5>
+     <form id="dealer_form" action='/game/dealer/hit' method='post'>
+      <input type='submit' class='btn btn-success' value="Click to see dealer's next card" />
+     </form>
+  </p>
+<% end %>
+
+</div>
+
+</br>
+
+
+<div class="well">
+
+  <h5>Player's cards:</h5>
+  
+    <% session[:p_cards].each do |card| %>
+      <%= card_image(card) %>
+    <% end %>
+  
+<% if @show_hit_or_stay_buttons %>
+  <p>
+  <% if @p_totals[1] != 0 %>
+    <h5>Your totals are: <%= @p_totals[0] %> and <%= @p_totals[1] %></h5>
+  <% else %>
+   <h5> Your total is: <%= @p_totals[0] %> </h5>
   <% end %>
-</ul>
-Your total is: <%= total(session[:p_cards]) %>
+
+  <form id="hit_form" action='/game/player/hit' method='post'>
+    <input type='submit' class='btn btn-success' value='Hit' />
+  </form>
+
+  <form id="stay_form" action='/game/player/stay' method='post'>
+    <input type='submit' class='btn btn-warning' value='Stay' />
+  </form>
+  </p>
+<% else %>
+  <p>
+    <h5>Your total is: <%= session[:player_sum] %></h5>
+  </p>
+<% end %>
+
+</div>
+</br>
