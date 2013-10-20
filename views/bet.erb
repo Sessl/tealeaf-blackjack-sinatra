@@ -1,1 +1,10 @@
-"Hi <%= session[:p_name] %> the betting form is not ready!"
+<h1>"Hi <%= session[:p_name] %> You have <%= session[:bet_total]%>"</h1>
+<h2>"Plese enter a bet"</h2>
+
+<p>
+<form id="bet_form" action='/bet' method='post'>
+  Bet <input type='text' name='bet' />
+  <br/>
+  <input type='submit' class='btn' value='Place bet' />
+</form>
+</p>

@@ -79,7 +79,23 @@ post '/set_name' do
      erb :player_name
   else
     session[:p_name] = params[:p_name]
-    redirect '/game'
+  #  redirect '/game'
+    session[:bet_total] = 500
+    redirect '/bet'
+  end
+end
+
+get '/bet' do
+  erb :bet
+end
+
+post '/bet'do
+  session[:bet] = params[:bet]
+  if session[:bet_total] != 0
+     redirect '/game'
+  else
+    @error = "Aloha, You have no money left."
+    erb :bet
   end
 end
 
@@ -106,24 +122,63 @@ get '/game' do
   
   session[:dealer_sum] = dealer_total(@d_totals)
 
-  if @p_totals[1] != 0
-    if @p_totals[0] > 21 && @p_totals[1] > 21
-      @show_hit_or_stay_buttons = false
-      @show_continue_button = true
-      @error = "You are busted!"
-      session[:player_sum] = @p_totals[0]
-      erb :game
-    elsif @p_totals[1] == 21
-      @show_hit_or_stay_buttons = false
-      session[:player_sum] = 21
-      redirect '/game/dealer/goes'
+  # adding code to capture Blackjack 
+
+  if @p_totals[1] == 21 && @d_totals[1] != 21
+    @show_hit_or_stay_buttons = false
+    @show_continue_button = true
+    @success = "Congratulations You hit Blackjack! You win bet and a half"
+    session[:bet_total] += session[:bet].to_i*1.5
+    erb :game
+  elsif @p_totals[1] != 21 && @d_totals[1] == 21
+    @show_hit_or_stay_buttons = false
+    @show_continue_button = true
+    @error = "Dealer hit Blackjack. You lose"
+    session[:bet_total] -= session[:bet]
+    erb :game
+  elsif @p_totals[1] == 21 && @d_totals[1] == 21
+    @show_hit_or_stay_buttons = false
+    @show_continue_button = true
+    @error = "It's a push"
+    erb :game
+  else  
+    if @p_totals[1] != 0
+      if @p_totals[0] > 21 && @p_totals[1] > 21
+        @show_hit_or_stay_buttons = false
+        @show_continue_button = true
+        @error = "You are busted!"
+        session[:player_sum] = @p_totals[0]
+        erb :game
+      else
+        erb :game
+      end
     else
+      session[:player_sum] = @p_totals[0]
       erb :game
     end
-  else
-      session[:player_sum] = @p_totals[0]
-      erb :game
   end
+
+#----------------------------------------------------------
+
+#  if @p_totals[1] != 0
+#    if @p_totals[0] > 21 && @p_totals[1] > 21
+#      @show_hit_or_stay_buttons = false
+#      @show_continue_button = true
+#      @error = "You are busted!"
+#      session[:player_sum] = @p_totals[0]
+#      erb :game
+     
+#    elsif @p_totals[1] == 21
+#      @show_hit_or_stay_buttons = false
+#      session[:player_sum] = 21
+#      redirect '/game/dealer/goes'
+#    else
+#      erb :game
+#    end
+#  else
+#      session[:player_sum] = @p_totals[0]
+#      erb :game
+#  end
  
 end
 
@@ -138,7 +193,9 @@ post '/game/player/hit' do
       @show_continue_button = true
       @error = "You are busted!"
       session[:player_sum] = @p_totals[0]
+      session[:bet_total] = session[:bet].to_i
       erb :game
+      
     elsif @p_totals[0] == 21 || @p_totals[1] == 21
       @show_hit_or_stay_buttons = false
       session[:player_sum] = 21
@@ -152,7 +209,9 @@ post '/game/player/hit' do
       @show_continue_button = true
       @error = "You are busted!"
       session[:player_sum] = @p_totals[0]
+      session[:bet_total] -= session[:bet].to_i
       erb :game
+     
     elsif @p_totals[0] == 21
       @show_hit_or_stay_buttons = false
       session[:player_sum] = 21
@@ -190,7 +249,9 @@ get '/game/dealer/goes' do
   @show_continue_button = true
   if session[:dealer_sum] > 21
     @success = "Dealer bust you win"
+    session[:bet_total] += session[:bet].to_i
     erb :game
+   
   elsif session[:dealer_sum] == 21 
     redirect '/game/who_won'
   elsif session[:dealer_sum] < 17
@@ -225,14 +286,16 @@ get '/game/who_won' do
     @error = "It's a push"
   elsif session[:dealer_sum] > session[:player_sum]
     @error = "Sorry dealer wins"
+    session[:bet_total] -= session[:bet].to_i
   else
     @success = "Congratulations you win"
+    session[:bet_total] += session[:bet].to_i
   end
   erb :game
 end
 
 post '/game/continue' do
-  redirect '/game'
+  redirect '/bet'
 end
 
 post '/game/quit' do
