@@ -53,6 +53,51 @@ helpers do
     value = card[1]
     "<img src='/images/cards/#{suit}_#{value}.jpg' class='card_image' >"
   end
+
+  def loser!(msg)
+    @error = "<strong>#{session[:p_name]} loses!</strong> \n #{msg}"
+    session[:bet_total] -= session[:bet].to_i
+    @show_hit_or_stay_buttons = false
+    @show_continue_button = true
+  end
+
+  def winner!(msg)
+    @success = "<strong>#{session[:p_name]} Wins!</strong> \n #{msg}"
+    session[:bet_total] += session[:bet].to_i
+    @show_hit_or_stay_buttons = false
+    @show_continue_button = true
+  end
+
+  def tie!(msg)
+    @error = "<strong>It's a tie!</strong> \n #{msg}"
+    @show_hit_or_stay_buttons = false
+    @show_continue_button = true
+  end
+  
+  def busted!(msg)
+    if session[:player_sum] > 21
+     @error = "<strong>#{session[:p_name]} Busted!</strong> \n #{msg}"
+     session[:bet_total] -= session[:bet].to_i
+    else
+      @success = "<strong>#{session[:p_name]} Wins!</strong> \n #{msg}"
+      session[:bet_total] += session[:bet].to_i
+    end
+    @show_hit_or_stay_buttons = false
+    @show_continue_button = true
+  end
+
+  def blackjack!
+    if session[:player_sum] == 21
+      @success = "<strong>#{session[:p_name]} hit Blackjack!</strong> \n #{session[:p_name]} wins bet and a half"
+      session[:bet_total] += session[:bet].to_i*1.5
+    else
+      @error = "<strong>Dealer hit Blackjack! #{session[:p_name]} loses"
+      session[:bet_total] -= session[:bet].to_i
+    end
+    @show_hit_or_stay_buttons = false
+    @show_continue_button = true
+  end
+      
 end
 
 before do
@@ -125,29 +170,21 @@ get '/game' do
   # adding code to capture Blackjack 
 
   if @p_totals[1] == 21 && @d_totals[1] != 21
-    @show_hit_or_stay_buttons = false
-    @show_continue_button = true
-    @success = "Congratulations You hit Blackjack! You win bet and a half"
-    session[:bet_total] += session[:bet].to_i*1.5
+    session[:player_sum] = @p_totals[1]
+    blackjack!
     erb :game
   elsif @p_totals[1] != 21 && @d_totals[1] == 21
-    @show_hit_or_stay_buttons = false
-    @show_continue_button = true
-    @error = "Dealer hit Blackjack. You lose"
-    session[:bet_total] -= session[:bet]
+    session[:dealer_sum] = @d_totals[1]
+    blackjack!
     erb :game
   elsif @p_totals[1] == 21 && @d_totals[1] == 21
-    @show_hit_or_stay_buttons = false
-    @show_continue_button = true
-    @error = "It's a push"
+    tie!("Both #{session[:p_name]} and the dealer tied at #{session[:player_sum]}")
     erb :game
   else  
     if @p_totals[1] != 0
       if @p_totals[0] > 21 && @p_totals[1] > 21
-        @show_hit_or_stay_buttons = false
-        @show_continue_button = true
-        @error = "You are busted!"
         session[:player_sum] = @p_totals[0]
+        busted!("#{session[:p_name]} busted at #{session[:player_sum]}")
         erb :game
       else
         erb :game
@@ -157,29 +194,6 @@ get '/game' do
       erb :game
     end
   end
-
-#----------------------------------------------------------
-
-#  if @p_totals[1] != 0
-#    if @p_totals[0] > 21 && @p_totals[1] > 21
-#      @show_hit_or_stay_buttons = false
-#      @show_continue_button = true
-#      @error = "You are busted!"
-#      session[:player_sum] = @p_totals[0]
-#      erb :game
-     
-#    elsif @p_totals[1] == 21
-#      @show_hit_or_stay_buttons = false
-#      session[:player_sum] = 21
-#      redirect '/game/dealer/goes'
-#    else
-#      erb :game
-#    end
-#  else
-#      session[:player_sum] = @p_totals[0]
-#      erb :game
-#  end
- 
 end
 
 post '/game/player/hit' do
@@ -189,11 +203,8 @@ post '/game/player/hit' do
 
   if @p_totals[1] != 0
     if @p_totals[0] > 21 && @p_totals[1] > 21
-      @show_hit_or_stay_buttons = false
-      @show_continue_button = true
-      @error = "You are busted!"
       session[:player_sum] = @p_totals[0]
-      session[:bet_total] = session[:bet].to_i
+      busted!("#{session[:p_name]} busted at #{session[:player_sum]}")
       erb :game
       
     elsif @p_totals[0] == 21 || @p_totals[1] == 21
@@ -205,13 +216,9 @@ post '/game/player/hit' do
     end
   else
     if @p_totals[0] > 21
-      @show_hit_or_stay_buttons = false
-      @show_continue_button = true
-      @error = "You are busted!"
       session[:player_sum] = @p_totals[0]
-      session[:bet_total] -= session[:bet].to_i
+      busted!("#{session[:p_name]} busted at #{session[:player_sum]}")
       erb :game
-     
     elsif @p_totals[0] == 21
       @show_hit_or_stay_buttons = false
       session[:player_sum] = 21
@@ -229,9 +236,9 @@ post '/game/player/stay' do
   @p_totals = total(session[:p_cards])
 
   if (@p_totals[1] > @p_totals[0]) && (@p_totals[1] <= 21)
-      session[:player_sum] = @p_totals[1]
+    session[:player_sum] = @p_totals[1]
   else
-      session[:player_sum] = @p_totals[0]
+    session[:player_sum] = @p_totals[0]
   end
   
   redirect '/game/player/stay'
@@ -248,10 +255,8 @@ get '/game/dealer/goes' do
   @show_hit_or_stay_buttons = false
   @show_continue_button = true
   if session[:dealer_sum] > 21
-    @success = "Dealer bust you win"
-    session[:bet_total] += session[:bet].to_i
+    busted!("#Dealer busted at #{session[:dealer_sum]}")
     erb :game
-   
   elsif session[:dealer_sum] == 21 
     redirect '/game/who_won'
   elsif session[:dealer_sum] < 17
@@ -280,16 +285,12 @@ end
 
 get '/game/who_won' do
   @show_dealer_button = false
-  @show_hit_or_stay_buttons = false
-  @show_continue_button = true
   if session[:dealer_sum] == session[:player_sum]
-    @error = "It's a push"
+    tie!("Both #{session[:p_name]} and the dealer tied at #{session[:player_sum]}")
   elsif session[:dealer_sum] > session[:player_sum]
-    @error = "Sorry dealer wins"
-    session[:bet_total] -= session[:bet].to_i
+    loser!("#{session[:p_name]} has a total of #{session[:player_sum]}, and the dealer has #{session[:dealer_sum]}")
   else
-    @success = "Congratulations you win"
-    session[:bet_total] += session[:bet].to_i
+    winner!("#{session[:p_name]} has a total of #{session[:player_sum]}, and the dealer has #{session[:dealer_sum]}")
   end
   erb :game
 end
