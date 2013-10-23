@@ -88,14 +88,18 @@ helpers do
 
   def blackjack!
     if session[:player_sum] == 21
-      @success = "<strong>#{session[:p_name]} hit Blackjack!</strong> \n #{session[:p_name]} wins bet and a half"
+      @winner = "<strong>#{session[:p_name]} hit Blackjack!</strong> \n #{session[:p_name]} wins bet and a half"
       session[:bet_total] += session[:bet].to_f*1.5
     else
-      @error = "<strong>Dealer hit Blackjack! #{session[:p_name]} loses"
+      @loser = "<strong>Dealer hit Blackjack! #{session[:p_name]} loses"
       session[:bet_total] -= session[:bet].to_f
     end
     @show_hit_or_stay_buttons = false
     @show_continue_button = true
+  end
+
+  def integer?(str)
+    /\A[+]?\d+\z/ === str
   end
       
 end
@@ -141,7 +145,10 @@ end
 
 post '/bet'do
   if params[:bet].to_f > session[:bet_total]
-    @error = "Insufficient credit #{session[:p_name]}, lower your bet."
+    @error = "<strong>Insufficient credit #{session[:p_name]}</strong>, lower your bet."
+    halt erb(:bet)
+  elsif !integer?(params[:bet])
+    @error = "<strong>Be Serious, enter a positive whole number as your bet</strong>"
     halt erb(:bet)
   end
 
@@ -179,7 +186,8 @@ get '/game' do
     blackjack!
     erb :game
   elsif @p_totals[1] != 21 && @d_totals[1] == 21
-    session[:dealer_sum] = @d_totals[1]
+  #  session[:dealer_sum] = @d_totals[1]
+    session[:player_sum] = @p_totals[0]
     blackjack!
     erb :game
   elsif @p_totals[1] == 21 && @d_totals[1] == 21
@@ -260,8 +268,8 @@ get '/game/dealer/goes' do
   @show_hit_or_stay_buttons = false
   @show_continue_button = true
   if session[:dealer_sum] > 21
-    busted!("#Dealer busted at #{session[:dealer_sum]}")
-    erb :game
+    busted!("Dealer busted at #{session[:dealer_sum]}")
+    erb :game, layout: false
   elsif session[:dealer_sum] == 21 
     redirect '/game/who_won'
   elsif session[:dealer_sum] < 17
@@ -274,7 +282,7 @@ end
 get '/game/dealer/hit' do
   @show_dealer_button = true
   @show_hit_or_stay_buttons = false
-  erb :game
+  erb :game, layout: false
 end
 
 post '/game/dealer/hit' do
@@ -297,7 +305,7 @@ get '/game/who_won' do
   else
     winner!("#{session[:p_name]} has a total of #{session[:player_sum]}, and the dealer has #{session[:dealer_sum]}")
   end
-  erb :game
+  erb :game, layout: false
 end
 
 post '/game/continue' do
