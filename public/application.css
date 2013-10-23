@@ -27,11 +27,15 @@ form#stay_form{
 }
 
 img.card_image{
+	width: 100px;
+	height:150px;
 	margin: 0px 5px 5px 0px;
 	border: 5px solid #ccc;
 }
 
 img.cover_image{
+	width: 100px;
+	height:150px;
 	margin: 0px 5px 5px 0px;
 	border: 5px solid #ccc;
 }
