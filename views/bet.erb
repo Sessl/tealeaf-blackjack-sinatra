@@ -1,10 +1,20 @@
-<h1>"Hi <%= session[:p_name] %> You have <%= session[:bet_total]%>"</h1>
-<h2>"Plese enter a bet"</h2>
+<div class="well well-small">
+  <h2>Hi <%= session[:p_name] %>, You have $<%= sprintf("%#.2f",session[:bet_total])%></h2>
 
-<p>
-<form id="bet_form" action='/bet' method='post'>
-  Bet <input type='text' name='bet' />
-  <br/>
-  <input type='submit' class='btn' value='Place bet' />
-</form>
-</p>
+  <% if @show_continue_button %>
+    <div style="overflow: hidden;">
+    <form id="quit_form" action='/game/quit' method='post'>
+    <input type='submit' class='btn btn-warning' value="Quit Game" />
+    </form>
+    </div>
+  <% else %>
+    <h4>How much would you like to bet?</h4>
+    <p>
+      <form id="bet_form" action='/bet' method='post'>
+      <input type='text' name='bet' />
+      <br/>
+      <input type='submit' class='btn btn-success' value='Place bet' />
+      </form>
+    </p>
+  <% end %>
+</div>

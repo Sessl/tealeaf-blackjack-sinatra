@@ -55,32 +55,32 @@ helpers do
   end
 
   def loser!(msg)
-    @error = "<strong>#{session[:p_name]} loses!</strong> \n #{msg}"
-    session[:bet_total] -= session[:bet].to_i
+    @loser = "<strong>#{session[:p_name]} loses!</strong> \n #{msg}"
+    session[:bet_total] -= session[:bet].to_f
     @show_hit_or_stay_buttons = false
     @show_continue_button = true
   end
 
   def winner!(msg)
-    @success = "<strong>#{session[:p_name]} Wins!</strong> \n #{msg}"
-    session[:bet_total] += session[:bet].to_i
+    @winner = "<strong>#{session[:p_name]} Wins!</strong> \n #{msg}"
+    session[:bet_total] += session[:bet].to_f
     @show_hit_or_stay_buttons = false
     @show_continue_button = true
   end
 
   def tie!(msg)
-    @error = "<strong>It's a tie!</strong> \n #{msg}"
+    @winner = "<strong>It's a tie!</strong> \n #{msg}"
     @show_hit_or_stay_buttons = false
     @show_continue_button = true
   end
   
   def busted!(msg)
     if session[:player_sum] > 21
-     @error = "<strong>#{session[:p_name]} Busted!</strong> \n #{msg}"
-     session[:bet_total] -= session[:bet].to_i
+     @loser = "<strong>#{session[:p_name]} Busted!</strong> \n #{msg}"
+     session[:bet_total] -= session[:bet].to_f
     else
-      @success = "<strong>#{session[:p_name]} Wins!</strong> \n #{msg}"
-      session[:bet_total] += session[:bet].to_i
+      @winner = "<strong>#{session[:p_name]} Wins!</strong> \n #{msg}"
+      session[:bet_total] += session[:bet].to_f
     end
     @show_hit_or_stay_buttons = false
     @show_continue_button = true
@@ -89,10 +89,10 @@ helpers do
   def blackjack!
     if session[:player_sum] == 21
       @success = "<strong>#{session[:p_name]} hit Blackjack!</strong> \n #{session[:p_name]} wins bet and a half"
-      session[:bet_total] += session[:bet].to_i*1.5
+      session[:bet_total] += session[:bet].to_f*1.5
     else
       @error = "<strong>Dealer hit Blackjack! #{session[:p_name]} loses"
-      session[:bet_total] -= session[:bet].to_i
+      session[:bet_total] -= session[:bet].to_f
     end
     @show_hit_or_stay_buttons = false
     @show_continue_button = true
@@ -124,24 +124,29 @@ post '/set_name' do
      erb :player_name
   else
     session[:p_name] = params[:p_name]
-  #  redirect '/game'
-    session[:bet_total] = 500
+    session[:bet_total] = 500.00
     redirect '/bet'
   end
 end
 
 get '/bet' do
-  erb :bet
+  if session[:bet_total] != 0.0
+    erb :bet
+  else
+    @error = "#{session[:p_name]} has no money left"
+    @show_continue_button = true
+    erb :bet
+  end
 end
 
 post '/bet'do
-  session[:bet] = params[:bet]
-  if session[:bet_total] != 0
-     redirect '/game'
-  else
-    @error = "Aloha, You have no money left."
-    erb :bet
+  if params[:bet].to_f > session[:bet_total]
+    @error = "Insufficient credit #{session[:p_name]}, lower your bet."
+    halt erb(:bet)
   end
+
+  session[:bet] = params[:bet]
+  redirect '/game'
 end
 
 get '/game' do
@@ -205,26 +210,26 @@ post '/game/player/hit' do
     if @p_totals[0] > 21 && @p_totals[1] > 21
       session[:player_sum] = @p_totals[0]
       busted!("#{session[:p_name]} busted at #{session[:player_sum]}")
-      erb :game
+      erb :game, layout: false
       
     elsif @p_totals[0] == 21 || @p_totals[1] == 21
       @show_hit_or_stay_buttons = false
       session[:player_sum] = 21
       redirect '/game/dealer/goes'
     else
-      erb :game
+      erb :game, layout: false
     end
   else
     if @p_totals[0] > 21
       session[:player_sum] = @p_totals[0]
       busted!("#{session[:p_name]} busted at #{session[:player_sum]}")
-      erb :game
+      erb :game, layout: false
     elsif @p_totals[0] == 21
       @show_hit_or_stay_buttons = false
       session[:player_sum] = 21
       redirect '/game/dealer/goes'
     else
-      erb :game
+      erb :game,  layout: false
     end
   end
   
