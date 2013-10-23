@@ -51,7 +51,7 @@ helpers do
     end
 
     value = card[1]
-    "<img src='/images/cards/#{suit}_#{value}.jpg' class='card_image' >"
+    "<img src='/images/cards/#{suit}_#{value.downcase}.jpg' class='card_image' >"
   end
 
   def loser!(msg)
