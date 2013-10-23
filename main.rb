@@ -12,14 +12,14 @@ helpers do
     sum2 = 0
 
     face_values.each do |val|
-      if val == "Ace"
+      if val == "ace"
         sum1 += 1
       else
         sum1 += (val.to_i == 0 ? 10 : val.to_i)    
       end
     end
 
-    if face_values.include? "Ace"
+    if face_values.include? "ace"
        sum2 = sum1 + 10
     end
 
@@ -51,7 +51,7 @@ helpers do
     end
 
     value = card[1]
-    "<img src='/images/cards/#{suit}_#{value.downcase}.jpg' class='card_image' >"
+    "<img src='/images/cards/#{suit}_#{value}.jpg' class='card_image' >"
   end
 
   def loser!(msg)
@@ -160,7 +160,7 @@ get '/game' do
   session[:turn] = session[:player_name]
   # create a deck in the session
   suits = ['H', 'D', 'C', 'S']
-  values = ['2','3', '4', '5', '6', '7', '8', '9', '10', 'Jack', 'Queen', 'King', 'Ace']
+  values = ['2','3', '4', '5', '6', '7', '8', '9', '10', 'jack', 'queen', 'king', 'ace']
   session[:deck] = suits.product(values).shuffle!
   
   # initialize the hand arrays
