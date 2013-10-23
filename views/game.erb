@@ -27,7 +27,7 @@
 </br>
 </br>
 
-<div class="well well-small text-center color: black">
+<div class="well text-center color: black">
   <h4>Dealer's Cards:</h4>
   
     <% session[:d_cards].each_with_index do |card, i| %>
@@ -39,7 +39,7 @@
     <% end %>
 <% if @show_dealer_button %>
   <p>
-     <h5>Dealer has <%= session[:dealer_sum]%> and will hit.</h5>
+     <h4>Dealer has <%= session[:dealer_sum]%> and will hit.</h4>
      <form id="dealer_form" action='/game/dealer/hit' method='post'>
       <input type='submit' class='btn btn-success' value="Click to see dealer's next card" />
      </form>
@@ -51,7 +51,7 @@
 </br>
 
 
-<div class="well well-small text-center color: black" id="player_cards">
+<div class="well text-center color: black" id="player_cards">
 
   <h4><%= session[:p_name]%>'s Cards:</h4>
   
