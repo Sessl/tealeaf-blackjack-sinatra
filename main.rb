@@ -124,7 +124,7 @@ end
 
 post '/set_name' do
   if params[:p_name] == ""
-    @error = "Name can't be empty. Please enter a valid name"
+    @error = "<h3>Name can't be empty. Please enter a valid name.</h3>"
      erb :player_name
   else
     session[:p_name] = params[:p_name]
@@ -137,7 +137,7 @@ get '/bet' do
   if session[:bet_total] != 0.0
     erb :bet
   else
-    @error = "#{session[:p_name]} has no money left"
+    @error = "<h3>#{session[:p_name]} has no money left.</h3>"
     @show_continue_button = true
     erb :bet
   end
@@ -145,10 +145,13 @@ end
 
 post '/bet'do
   if params[:bet].to_f > session[:bet_total]
-    @error = "<strong>Insufficient credit #{session[:p_name]}</strong>, lower your bet."
+    @error = "<h3><strong>Insufficient credit #{session[:p_name]}</strong>, lower your bet.</h3>"
     halt erb(:bet)
   elsif !integer?(params[:bet])
-    @error = "<strong>Be Serious, enter a positive whole number as your bet</strong>"
+    @error = "<h3><strong>Be Serious, enter a positive whole number as your bet.</strong></h3>"
+    halt erb(:bet)
+  elsif params[:bet].to_f == 0.0
+    @error = "<h3><strong>#{session[:p_name]}, You've got to bet some to win some!</strong></h3>"
     halt erb(:bet)
   end
 
